@@ -1,5 +1,4 @@
 import os
-import asyncio
 from telegram import Update
 from telegram.ext import (
     ApplicationBuilder,
@@ -13,7 +12,6 @@ from google import genai
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
-# Configure NEW Gen AI SDK
 client = genai.Client(api_key=GEMINI_API_KEY)
 
 user_sessions = {}
@@ -54,8 +52,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     user_message = update.message.text
     session = user_sessions.get(user_id, {})
-    context_prompt = f"""
-    {SYSTEM_PROMPT}
+    context_prompt = f"""{SYSTEM_PROMPT}
     
     Previous issue: {session.get('last_problem', 'None')}
     Machine model: {session.get('last_model', 'Not specified')}
@@ -81,7 +78,7 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "**Anong model ng machine ito?** Para mas accurate ang maibigay kong troubleshooting steps. 😊"
     )
 
-async def main():
+def main():
     print("🔄 Starting MATT — McLink Assistant Troubleshooter...")
     application = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
     application.add_handler(CommandHandler('start', start))
@@ -89,8 +86,7 @@ async def main():
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     application.add_handler(MessageHandler(filters.PHOTO, handle_photo))
     print("✅ MATT is online and ready!")
-    await application.run_polling()
+    application.run_polling()
 
 if __name__ == "__main__":
-    import asyncio
-    asyncio.run(main())
+    main()
