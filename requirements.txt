@@ -1,4 +1,4 @@
-python-telegram-bot==20.6
-google-generativeai==0.7.2
-python-dotenv==1.0.0
-protobuf<5.28
+python-telegram-bot==21.1.1
+google-generativeai
+python-dotenv
+protobuf==4.25.8
