@@ -8,13 +8,13 @@ from telegram.ext import (
     MessageHandler,
     filters
 )
-import google.genai as genai
+import google.generativeai as genai
 
 # Environment variables
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
-# Configure Gemini — NEW SDK
+# Configure Gemini
 genai.configure(api_key=GEMINI_API_KEY)
 model = genai.GenerativeModel("gemini-2.0-flash")
 
