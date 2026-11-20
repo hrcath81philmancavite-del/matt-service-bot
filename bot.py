@@ -81,7 +81,7 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "**Anong model ng machine ito?** Para mas accurate ang maibigay kong troubleshooting steps. 😊"
     )
 
-def main():
+async def main():
     print("🔄 Starting MATT — McLink Assistant Troubleshooter...")
     application = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
     application.add_handler(CommandHandler('start', start))
@@ -89,7 +89,8 @@ def main():
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     application.add_handler(MessageHandler(filters.PHOTO, handle_photo))
     print("✅ MATT is online and ready!")
-    application.run_polling()
+    await application.run_polling()
 
 if __name__ == "__main__":
-    main()
+    import asyncio
+    asyncio.run(main())
