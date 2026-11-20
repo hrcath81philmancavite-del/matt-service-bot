@@ -186,7 +186,9 @@ async def process_feedback(update: Update, context: ContextTypes.DEFAULT_TYPE, u
     save_message(user_id, f"[Feedback: {outcome}] {notes}", 1)
     await update.message.reply_text(reply)
 
-def main():
+import asyncio
+
+async def main():
     print("🔄 Starting MATT — McLink Assistant Troubleshooter...")
     application = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
     
@@ -196,9 +198,9 @@ def main():
     application.add_handler(MessageHandler(filters.PHOTO, handle_photo))
     
     print("✅ MATT is online and ready!")
-    application.run_polling()
+    await application.run_polling()
 
 if __name__ == "__main__":
-    import asyncio
     asyncio.run(main())
+
 
