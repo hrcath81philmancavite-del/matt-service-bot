@@ -10,15 +10,12 @@ from telegram.ext import (
 )
 import google.generativeai as genai
 
-# Environment variables
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
-# Configure Gemini
 genai.configure(api_key=GEMINI_API_KEY)
 model = genai.GenerativeModel("gemini-2.0-flash")
 
-# User sessions
 user_sessions = {}
 
 SYSTEM_PROMPT = """
@@ -35,10 +32,7 @@ RULES:
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
-    user_sessions[user_id] = {
-        "last_problem": None,
-        "last_model": None
-    }
+    user_sessions[user_id] = {"last_problem": None, "last_model": None}
     await update.message.reply_text(
         "👋 Hello! Ako si **MATT** — McLink Assistant for Technician Troubleshooting.\n\n"
         "Send mo lang:\n"
@@ -59,23 +53,18 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     user_message = update.message.text
-
     session = user_sessions.get(user_id, {})
     context_prompt = f"""
     Previous issue: {session.get('last_problem', 'None')}
     Machine model: {session.get('last_model', 'Not specified')}
-    
     Technician: {user_message}
     """
-
     response = model.generate_content([SYSTEM_PROMPT, context_prompt])
     reply = response.text
-
     user_sessions[user_id] = {
         "last_problem": user_message,
         "last_model": session.get("last_model", "Not specified")
     }
-
     await update.message.reply_text(reply)
 
 async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -84,26 +73,15 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "**Anong model ng machine ito?** Para mas accurate ang maibigay kong troubleshooting steps. 😊"
     )
 
-async def main():
+def main():
     print("🔄 Starting MATT — McLink Assistant Troubleshooter...")
     application = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
-
     application.add_handler(CommandHandler('start', start))
     application.add_handler(CommandHandler('help', help_command))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     application.add_handler(MessageHandler(filters.PHOTO, handle_photo))
-
     print("✅ MATT is online and ready!")
-    
-    await application.initialize()
-    await application.start()
-    await application.updater.start_polling()
-    
-    # Keep running
-    stop_signal = asyncio.Event()
-    await stop_signal.wait()
-    
-    await application.stop()
+    application.run_polling()
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
