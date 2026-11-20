@@ -8,20 +8,19 @@ from telegram.ext import (
     MessageHandler,
     filters
 )
-import google.generativeai as genai
+import google.genai as genai
 
 # Environment variables
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
-# Configure Gemini
+# Configure Gemini — NEW SDK
 genai.configure(api_key=GEMINI_API_KEY)
 model = genai.GenerativeModel("gemini-2.0-flash")
 
-# User sessions to remember context
+# User sessions
 user_sessions = {}
 
-# System prompt — MATT's personality and knowledge base
 SYSTEM_PROMPT = """
 You are MATT — McLink Assistant for Technician Troubleshooting.
 You are an expert on photocopier and printer repair, specifically Ricoh, Xerox, Canon, HP models.
@@ -61,7 +60,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     user_message = update.message.text
 
-    # Build conversation context
     session = user_sessions.get(user_id, {})
     context_prompt = f"""
     Previous issue: {session.get('last_problem', 'None')}
@@ -73,7 +71,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     response = model.generate_content([SYSTEM_PROMPT, context_prompt])
     reply = response.text
 
-    # Save context
     user_sessions[user_id] = {
         "last_problem": user_message,
         "last_model": session.get("last_model", "Not specified")
@@ -87,7 +84,7 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "**Anong model ng machine ito?** Para mas accurate ang maibigay kong troubleshooting steps. 😊"
     )
 
-def main():
+async def main():
     print("🔄 Starting MATT — McLink Assistant Troubleshooter...")
     application = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
 
@@ -97,7 +94,16 @@ def main():
     application.add_handler(MessageHandler(filters.PHOTO, handle_photo))
 
     print("✅ MATT is online and ready!")
-    application.run_polling()
+    
+    await application.initialize()
+    await application.start()
+    await application.updater.start_polling()
+    
+    # Keep running
+    stop_signal = asyncio.Event()
+    await stop_signal.wait()
+    
+    await application.stop()
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
