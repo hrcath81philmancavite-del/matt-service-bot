@@ -8,13 +8,13 @@ from telegram.ext import (
     MessageHandler,
     filters
 )
-import google.generativeai as genai
+from google import genai
 
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
-genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel("gemini-2.0-flash")
+# Configure NEW Gen AI SDK
+client = genai.Client(api_key=GEMINI_API_KEY)
 
 user_sessions = {}
 
@@ -55,16 +55,24 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_message = update.message.text
     session = user_sessions.get(user_id, {})
     context_prompt = f"""
+    {SYSTEM_PROMPT}
+    
     Previous issue: {session.get('last_problem', 'None')}
     Machine model: {session.get('last_model', 'Not specified')}
     Technician: {user_message}
     """
-    response = model.generate_content([SYSTEM_PROMPT, context_prompt])
+    
+    response = client.models.generate_content(
+        model="gemini-2.0-flash",
+        contents=context_prompt
+    )
     reply = response.text
+
     user_sessions[user_id] = {
         "last_problem": user_message,
         "last_model": session.get("last_model", "Not specified")
     }
+
     await update.message.reply_text(reply)
 
 async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
